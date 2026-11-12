@@ -7332,9 +7332,8 @@ const AL_IKON = {
 const AL_WARNA = [199, 160, 262, 340, 28, 45, 222, 128, 290, 8, 175, 312];
 
 function alWarna(teks) {
-        let x = 0;
-        String(teks).split('').forEach(function(c) { x = (x * 31 + c.charCodeAt(0)) % 9973; });
-        return AL_WARNA[x % AL_WARNA.length];
+        // Semua kartu memakai satu warna (biru keunguan) agar tampilan tenang dan seragam.
+        return 238;
 }
 
 function alHost(url) {
@@ -7368,7 +7367,7 @@ function showAppLainnya() {
         setActiveMenu('applain');
         window.appLain = { data: [], cat: '', q: '', nama: [] };
         render(
-                pageHead('App Lainnya', 'Aplikasi dan situs kerja lainnya. Ketuk salah satu untuk membuka di tab baru.') +
+                pageHead('App Lainnya', '') +
                 '<div id="alContainer">' + memuat('Memuat daftar aplikasi...') + '</div>'
         );
         if (!window.__alGalatGambar) {
