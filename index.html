@@ -1507,6 +1507,37 @@ html[data-tema="gelap"] .al-chip[aria-pressed="true"] { color: #0d1224; }
   .island.work .isl-ic, .isl-bar i { animation: none; }
 }
 
+/* ---- Penanda loading: jam pasir di tengah halaman, kotak memuat, dan spinner kecil ---- */
+@keyframes simakPutar { to { transform: rotate(360deg); } }
+@keyframes simakDenyut { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes jpPutar { 0%, 84% { transform: rotate(0deg); } 100% { transform: rotate(180deg); } }
+@keyframes jpAtas { 0% { transform: scaleY(1); } 80%, 100% { transform: scaleY(0); } }
+@keyframes jpBawah { 0% { transform: scaleY(0); } 80%, 100% { transform: scaleY(1); } }
+@keyframes jpAlir { 0%, 3% { opacity: 0; } 8%, 78% { opacity: 1; } 84%, 100% { opacity: 0; } }
+@keyframes jpTetes { to { stroke-dashoffset: -6; } }
+.jp { display: block; flex: none; color: var(--brand); }
+html[data-tema="gelap"] .jp { color: #dbe7f3; }
+.jp g, .jp path, .jp line { transform-box: fill-box; }
+.jp .jp-rot { transform-box: view-box; transform-origin: 50% 50%; animation: jpPutar 2.6s cubic-bezier(.65, 0, .35, 1) infinite; }
+.jp .jp-kaca { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.jp .jp-pasir { fill: var(--gold); }
+.jp .jp-atas { transform-origin: 50% 100%; animation: jpAtas 2.6s linear infinite; }
+.jp .jp-bawah { transform-origin: 50% 100%; animation: jpBawah 2.6s linear infinite; }
+.jp .jp-alir { stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 2 4; animation: jpAlir 2.6s linear infinite, jpTetes .35s linear infinite; }
+.simak-muat { position: fixed; left: 50%; top: 50%; z-index: 90; display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 150px; padding: 22px 30px 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 14px 44px rgba(10, 25, 40, .2); color: var(--muted); font-size: 13.5px; font-weight: 600; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -46%); transition: opacity .22s, transform .22s, visibility .22s; }
+.simak-muat.on { opacity: 1; visibility: visible; transform: translate(-50%, -50%); }
+.loading-box { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border: 1px dashed var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 14px; }
+.spin { display: inline-block; flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--brand); animation: simakPutar .8s linear infinite; vertical-align: -4px; }
+.spin-sm { width: 13px; height: 13px; border-width: 2px; vertical-align: -2px; }
+html[data-tema="gelap"] .spin, html[data-tema="gelap"] .dok-muat::before { border-top-color: var(--gold); }
+.dok-muat::before { content: ""; display: inline-block; width: 13px; height: 13px; margin-right: 8px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--brand); animation: simakPutar .8s linear infinite; vertical-align: -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .jp .jp-rot, .jp .jp-atas, .jp .jp-bawah, .jp .jp-alir { animation: none; }
+  .jp .jp-atas { transform: scaleY(.5); } .jp .jp-bawah { transform: scaleY(.5); }
+  .simak-muat { animation: simakDenyut 1.6s ease-in-out infinite; transition: opacity .2s; }
+  .spin, .dok-muat::before { animation-duration: 2.4s; }
+}
+
 /* ---- Arsip & Foto Kegiatan: daftar tiga baris ---- */
 .dok-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1); overflow: hidden; }
 .dok-row { display: flex; align-items: center; gap: 16px; padding: 18px 22px; border-top: 1px solid var(--line); }
@@ -1750,6 +1781,22 @@ function skeleton(count, cls) {
 function emptyState(title, text) {
                 return '<div class="state"><strong>' + escapeHtml(title) + '</strong>' +
                                 (text ? escapeHtml(text) : '') + '</div>';
+}
+
+function jamPasir(ukuran) {
+                const u = ukuran || 40;
+                return '<svg class="jp" viewBox="0 0 48 64" width="' + u + '" height="' + Math.round(u * 64 / 48) + '" aria-hidden="true">' +
+                                '<g class="jp-rot">' +
+                                '<path class="jp-pasir jp-atas" d="M13 12 H35 C35 20 28 26 24 32 C20 26 13 20 13 12 Z"/>' +
+                                '<path class="jp-pasir jp-bawah" d="M24 32 C28 38 35 44 35 52 V57 H13 V52 C13 44 20 38 24 32 Z"/>' +
+                                '<line class="jp-alir" x1="24" y1="31" x2="24" y2="55"/>' +
+                                '<path class="jp-kaca" d="M12 6 V12 C12 20 20 26 24 32 C20 38 12 44 12 52 V58 M36 6 V12 C36 20 28 26 24 32 C28 38 36 44 36 52 V58 M7 5 H41 M7 59 H41"/>' +
+                                '</g></svg>';
+}
+
+// Penanda memuat di dalam halaman: ikon jam pasir dan teks. Dipakai di tempat yang menunggu data dari server.
+function memuat(teks) {
+                return '<div class="loading-box" role="status" aria-live="polite">' + jamPasir(30) + '<span>' + escapeHtml(teks || 'Memuat data...') + '</span></div>';
 }
 
 function errorState(title, text) {
@@ -3208,8 +3255,8 @@ function showSerbaInformasi() {
                                                 'Peta akan dimuat saat bagian ini dibuka.')
                 );
                 setHtml('rekapAlumniContainer',
-                '<h3 class="sub-title">Rekap Jumlah Lulusan per Tahun dan per Sekolah</h3><div id="rekapLulusanContainer">Memuat data lulusan...</div>' +
-                '<h3 class="sub-title" style="margin-top:28px">Rekap Hasil Tracer Study</h3><div id="rekapTracerContainer">Memuat data tracer study...</div>');
+                '<h3 class="sub-title">Rekap Jumlah Lulusan per Tahun dan per Sekolah</h3><div id="rekapLulusanContainer">' + memuat('Memuat data lulusan...') + '</div>' +
+                '<h3 class="sub-title" style="margin-top:28px">Rekap Hasil Tracer Study</h3><div id="rekapTracerContainer">' + memuat('Memuat data tracer study...') + '</div>');
         pasangUnduhSerbaInformasi();
 
         pastikanDataSekolah(function() {
@@ -3902,7 +3949,7 @@ function initPetaSekolah() {
                 const st = window.petaState;
                 if (st.loading) return;
                 st.loading = true;
-                setHtml('petaContainer', emptyState('Memuat peta...'));
+                setHtml('petaContainer', memuat('Memuat peta...'));
 
                 let leafletSiap = false;
                 let dataSiap = false;
@@ -4121,7 +4168,7 @@ function accordion(id, icon, title, desc, bodyId, loadingText) {
                                                 '<span class="acc-text"><strong>' + title + '</strong><span>' + desc + '</span></span>' +
                                                 '<span class="acc-arrow">' + ic('chev-right') + '</span>' +
                                 '</button>' +
-                                '<div class="acc-body"><div id="' + bodyId + '">' + emptyState(loadingText) + '</div></div>' +
+                                '<div class="acc-body"><div id="' + bodyId + '">' + (/^Memuat/.test(loadingText) ? memuat(loadingText) : emptyState(loadingText)) + '</div></div>' +
                 '</div>';
 }
 
@@ -4618,7 +4665,7 @@ function showDetailSekolah(idSekolah) {
                                                                                                 idItem('Status', s.status) +
                                                                                                 idItem('Akreditasi', s.akreditasi) +
                                                                                                 '<div><dt>Status Adiwiyata</dt><dd id="adiwiyataSekolah">' +
-                                                                                                                '<span style="font-weight:500;color:var(--muted)">Memuat...</span></dd></div>' +
+                                                                                                                '<span style="font-weight:500;color:var(--muted)"><span class="spin spin-sm"></span> Memuat...</span></dd></div>' +
                                                                                                 idItem('Kepala sekolah', s.nama_kepala_sekolah) +
                                                                                                 idItem('NIP kepala sekolah', s.nip_kepala_sekolah) +
                                                                                                 idItem('Operator sekolah', s.nama_operator) +
@@ -6289,13 +6336,13 @@ function showDopadu() {
         window.dopadu = { data: null, mode: (window.dopadu && window.dopadu.mode) || 'kartu' };
         render(
                 pageHead('Dopadu', 'Data Olahan Persektor Terpadu: hasil indikator laporan SMA dan SMK.') +
-                '<div id="dopaduContainer">Memuat hasil indikator...</div>'
+                '<div id="dopaduContainer">' + memuat('Memuat hasil indikator...') + '</div>'
         );
         muatDopadu('');
 }
 
 function muatDopadu(tab) {
-        setHtml('dopaduContainer', 'Memuat hasil indikator...');
+        setHtml('dopaduContainer', memuat('Memuat hasil indikator...'));
         google.script.run
                 .withSuccessHandler(function(data) { renderDopadu(data); })
                 .withFailureHandler(function(error) {
@@ -7322,7 +7369,7 @@ function showAppLainnya() {
         window.appLain = { data: [], cat: '', q: '', nama: [] };
         render(
                 pageHead('App Lainnya', 'Aplikasi dan situs kerja lainnya. Ketuk kartu untuk membuka di tab baru.') +
-                '<div id="alContainer">Memuat daftar aplikasi...</div>'
+                '<div id="alContainer">' + memuat('Memuat daftar aplikasi...') + '</div>'
         );
         if (!window.__alGalatGambar) {
                 window.__alGalatGambar = true;
@@ -7662,6 +7709,73 @@ document.addEventListener('DOMContentLoaded', function() {
       google.script.run = mk(google.script.run, {});
     }
   } catch (e) { /* bila google.script.run tidak bisa dibungkus, kapsul tetap menampilkan notifikasi */ }
+})();
+</script>
+
+
+<script>
+/* =====================================================
+   PENANDA LOADING GLOBAL
+   Setiap permintaan ke server (google.script.run) dihitung. Selama ada yang belum selesai,
+   kartu jam pasir tampil di tengah halaman. Kartu baru muncul bila permintaan lebih dari 0,3 detik,
+   supaya tidak berkedip pada permintaan yang cepat. Kartu tidak menghalangi klik atau gulir.
+===================================================== */
+(function () {
+  if (!(window.google && google.script && google.script.run && typeof Proxy === 'function')) return;
+  var JEDA_TAMPIL = 300, BATAS_AMAN = 120000;
+  var jumlah = 0, timer = null, bar = null;
+
+  function adaBar() {
+    if (bar) return bar;
+    bar = document.createElement('div');
+    bar.className = 'simak-muat';
+    bar.setAttribute('role', 'status');
+    bar.setAttribute('aria-live', 'polite');
+    bar.innerHTML = (typeof jamPasir === 'function' ? jamPasir(46) : '') + '<span>Memuat data...</span>';
+    document.body.appendChild(bar);
+    return bar;
+  }
+  function mulai() {
+    jumlah++;
+    if (jumlah === 1) {
+      clearTimeout(timer);
+      timer = setTimeout(function () { if (jumlah > 0) adaBar().classList.add('on'); }, JEDA_TAMPIL);
+    }
+  }
+  function selesai() {
+    jumlah = Math.max(0, jumlah - 1);
+    if (jumlah === 0) {
+      clearTimeout(timer);
+      if (bar) bar.classList.remove('on');
+    }
+  }
+  function rantai(dasar, ok, gagal, user, adaUser) {
+    return new Proxy({}, { get: function (_, nama) {
+      if (typeof nama !== 'string' || nama === 'then') return undefined;
+      if (nama === 'withSuccessHandler') return function (f) { return rantai(dasar, f, gagal, user, adaUser); };
+      if (nama === 'withFailureHandler') return function (f) { return rantai(dasar, ok, f, user, adaUser); };
+      if (nama === 'withUserObject') return function (u) { return rantai(dasar, ok, gagal, u, true); };
+      return function () {
+        var sudah = false, pengaman;
+        var akhir = function () { if (sudah) return; sudah = true; clearTimeout(pengaman); selesai(); };
+        mulai();
+        pengaman = setTimeout(akhir, BATAS_AMAN);
+        try {
+          var r = dasar.withSuccessHandler(function () {
+            akhir();
+            if (typeof ok === 'function') return ok.apply(this, arguments);
+          }).withFailureHandler(function () {
+            akhir();
+            if (typeof gagal === 'function') return gagal.apply(this, arguments);
+            console.error('[SIMAK] ' + nama + ':', arguments[0]);
+          });
+          if (adaUser) r = r.withUserObject(user);
+          return r[nama].apply(r, arguments);
+        } catch (e) { akhir(); throw e; }
+      };
+    } });
+  }
+  try { google.script.run = rantai(google.script.run, null, null, undefined, false); } catch (e) { /* bila tidak bisa dibungkus, halaman tetap berjalan tanpa penanda */ }
 })();
 </script>
 
